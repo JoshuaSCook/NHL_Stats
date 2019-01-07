@@ -1,12 +1,13 @@
 // Get elements that will ultimately be populated with json data
 var teamListElement = $("#team-list");
 var teamElement = $("#team");
-var playerElement = $("#player");
+var playerListElement = $("#player");
 
 // Creates a list of all team IDs that can be iterated through later
 var teamIDList = [];
+var playerIDList = [];
 
-// Access the ALL teams overview api
+// Access the ALL TEAMS overview api
 var queryURL = "https://statsapi.web.nhl.com/api/v1/teams/"
 console.log(queryURL);
 
@@ -29,9 +30,11 @@ $.ajax({
     // If button is clicked, pull up the coorisponding TEAM json
     for (i = 0; i < teamIDList.length; i++) {
         $("#btn-" + teamIDList[i]).on("click", function () {
+            // Empty the team and player elements to get ready for the new ones
             teamElement.html("");
+            playerListElement.html("");
 
-            // Access the target team api
+            // Access the TARGET TEAM api
             var teamID = $(this).attr("id");
             teamID = teamID.replace("btn-", "");
             var queryURL = "https://statsapi.web.nhl.com/api/v1/teams/" + teamID + "?hydrate=stats(splits=statsSingleSeason)/";
@@ -74,6 +77,31 @@ $.ajax({
                 teamElement.append(lossesElement);
                 teamElement.append(pointsElement);
                 teamElement.append(rankElement);
+            });
+            
+            // Access the ROSTER api
+            var teamID = $(this).attr("id");
+            teamID = teamID.replace("btn-", "");
+            var queryURL = "https://statsapi.web.nhl.com/api/v1/teams/" + teamID + "/roster?hydrate=stats(splits=statsSingleSeason)/";
+            console.log(queryURL);
+
+            // Get and return data
+            $.ajax({
+                url: queryURL,
+                method: "GET"
+            }).done(function(data) {
+                // For each player in the data, get thier name and id to create li element
+                for (i = 0; i < data.roster.length; i++) {
+                    var playerName = data.roster[i].person.fullName;
+                    console.log(playerName);
+                    var playerID = data.roster[i].person.id;
+                    console.log(playerID);
+
+                    // Create and append button li to ul
+                    var player = $("<li><button id='btn-" + playerID + "'>" + playerName + "</button></li>");
+                    playerListElement.append(player);
+                    playerIDList.push(playerID);
+                };
             });
         });
     };
